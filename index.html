@@ -472,7 +472,7 @@
             </div>
             <div class="field" id="field-last">
               <label for="lastName">Last Name <span aria-hidden="true">*</span></label>
-              <input type="text" id="lastName" name="lastName" placeholder="Smith"
+              <input type="text" id="lastName" name="lastName" placeholder="cody"
                 autocomplete="family-name" required aria-required="true" aria-describedby="error-last"/>
               <span class="field-error" id="error-last" role="alert">Please enter your last name.</span>
             </div>
@@ -607,6 +607,34 @@
   });
 
   form.addEventListener('input', () => { alertBand.style.display = 'none'; });
+
+  // send to spredsheet
+  const scriptURL = "https://script.google.com/macros/s/AKfycbz9l7AgSfCZIqFDFQ2gCMm1Us0l95qaZtz8UfzMhRWXOavVmJB_0LcDzoz_mzwoSFTCVw/exec";
+
+  document.getElementById("rsvpForm").addEventListener('submit' , function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+
+    const data = {
+      firstname: form.firstname.value,
+      lastname: form.lastname.value,
+      email: form.email.value,
+      phone: form.phone.value,
+      attending: form.attending.checked,
+      notattending: form.notattending.checked
+    };
+
+    fetch(scriptURL, {
+      method: "POST",
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("Success:",result);
+      form.reset();
+    })
+  })
 </script>
 </body>
 </html>
