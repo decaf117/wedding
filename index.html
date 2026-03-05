@@ -221,6 +221,33 @@
     }
     input::placeholder { color: rgba(240,232,213,0.3); }
 
+    select {
+      width: 100%;
+      background: rgba(240,232,213,0.06);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 1px;
+      padding: 0.75rem 1rem;
+      color: var(--cream);
+      font-family: 'Lato', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 300;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      cursor: pointer;
+      transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+      outline: none;
+    }
+    select:focus {
+      border-color: var(--lavender);
+      box-shadow: 0 0 0 3px rgba(122,79,150,0.18);
+    }
+    select option {
+      background: #1e1a2e;
+      color: var(--cream);
+    }
+
     .attendance-group {
       display: flex;
       gap: 1.5rem;
@@ -437,9 +464,9 @@
     <span class="amp">&amp;</span><br/>
     Cody
   </h1>
-  <p class="date-line">September 05, 2026 &nbsp;·&nbsp; Six O'Clock in the Evening</p>
+  <p class="date-line">September 20, 2025 &nbsp;·&nbsp; Six O'Clock in the Evening</p>
   <div class="divider" aria-hidden="true"><span class="divider-gem">✦</span></div>
-  <p class="venue">Venue name &nbsp;·&nbsp; TBD Florida</p>
+  <p class="venue">The Rosewood Manor &nbsp;·&nbsp; Savannah, Georgia</p>
   <div class="scroll-cta" aria-hidden="true">
     <span>Scroll</span>
     <span class="arrow"></span>
@@ -472,7 +499,7 @@
             </div>
             <div class="field" id="field-last">
               <label for="lastName">Last Name <span aria-hidden="true">*</span></label>
-              <input type="text" id="lastName" name="lastName" placeholder="cody"
+              <input type="text" id="lastName" name="lastName" placeholder="Smith"
                 autocomplete="family-name" required aria-required="true" aria-describedby="error-last"/>
               <span class="field-error" id="error-last" role="alert">Please enter your last name.</span>
             </div>
@@ -509,6 +536,29 @@
             <span class="field-error" id="error-attendance" role="alert">Please select your attendance.</span>
           </div>
 
+          <div class="form-row">
+            <div class="field">
+              <label for="plusOne">Bringing Someone?</label>
+              <select id="plusOne" name="plusOne">
+                <option value="0">0</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+                <option value="3">+3</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="kids">Any Kids?</label>
+              <select id="kids" name="kids">
+                <option value="0">0</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+                <option value="3">+3</option>
+                <option value="4">+4</option>
+                <option value="5">+5</option>
+              </select>
+            </div>
+          </div>
+
           <button type="submit" class="btn-submit"><span>Send My RSVP</span></button>
         </form>
       </div>
@@ -522,7 +572,7 @@
     <div class="honeyfund-card">
       <h2 class="honeyfund-title">Honey Fund Donation</h2>
       <p class="honeyfund-text">Your love and presence is the greatest gift of all. If you'd like to contribute to our honeymoon fund, we would be truly grateful.</p>
-      <a href="https://linktr.ee/vanscoywedding" class="honeyfund-btn" aria-label="Donate to our Honey Fund">
+      <a href="https://linktr.ee/vanscoywedding" class="honeyfund-btn" target="_blank" rel="noopener noreferrer" aria-label="Donate to our Honey Fund">
         <span>Visit Our Honey Fund</span>
       </a>
     </div>
@@ -532,7 +582,7 @@
 <!-- FOOTER -->
 <footer>
   <p class="footer-names">Michiah &amp; Cody</p>
-  <p>September 05, 2026 &nbsp;·&nbsp; TBD Florida</p>
+  <p>September 20, 2025 &nbsp;·&nbsp; Savannah, Georgia</p>
 </footer>
 
 <script>
@@ -580,7 +630,7 @@
     return ok;
   }
 
-  form.addEventListener('submit', function(e) {
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
     const fn  = document.getElementById('firstName').value.trim();
     const ln  = document.getElementById('lastName').value.trim();
@@ -602,39 +652,39 @@
 
     if (!ok) { alertBand.style.display = 'block'; return; }
     alertBand.style.display = 'none';
+
+    // Build payload matching your Google Sheet column headers
+    const payload = {
+      firstName:    fn,
+      lastName:     ln,
+      email:        em,
+      phone:        ph,
+      attending:    cbA.checked ? 'Yes' : 'No',
+      notAttending: cbN.checked ? 'Yes' : 'No',
+      plusOne:      document.getElementById('plusOne').value,
+      kids:         document.getElementById('kids').value
+    };
+
+    const submitBtn = form.querySelector('.btn-submit span');
+    submitBtn.textContent = 'Sending…';
+
+    try {
+      await fetch('https://script.google.com/macros/s/AKfycbweZ73yWtyGb9AOU9mGQu23LuBHldGusAYdCnwDHHT-qPgZMQlm1d_pc3at33K7upBZWQ/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error('Submission error:', err);
+    }
+
+    // Show success regardless (no-cors means we can't read the response)
     form.style.display = 'none';
     successMsg.style.display = 'block';
   });
 
   form.addEventListener('input', () => { alertBand.style.display = 'none'; });
-
-  // send to spredsheet
-  const scriptURL = "https://script.google.com/macros/s/AKfycbz9l7AgSfCZIqFDFQ2gCMm1Us0l95qaZtz8UfzMhRWXOavVmJB_0LcDzoz_mzwoSFTCVw/exec";
-
-  document.getElementById("rsvpForm").addEventListener('submit' , function (e) {
-    e.preventDefault();
-
-    const form = e.target;
-
-    const data = {
-      firstname: form.firstname.value,
-      lastname: form.lastname.value,
-      email: form.email.value,
-      phone: form.phone.value,
-      attending: form.attending.checked,
-      notattending: form.notattending.checked
-    };
-
-    fetch(scriptURL, {
-      method: "POST",
-      body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-      console.log("Success:",result);
-      form.reset();
-    })
-  })
 </script>
 </body>
 </html>
